@@ -4,7 +4,6 @@
             "target_name": "multihashing",
             "sources": [
                 "multihashing.cc",
-                "scryptjane.c",
                 "scryptn.c",
                 "keccak.c",
                 "skein.c",
@@ -55,8 +54,20 @@
                 "crypto",
             ],
             "cflags_cc": [
-                "-std=c++0x"
+                "-std=c++0x",
+                "-Wno-missing-field-initializers",
+                "-Wno-unused-function",
+                "-Wno-unused-const-variable",
+                "-Wno-unused-private-field",                
             ],
+            "xcode_settings": {
+                "OTHER_CFLAGS": [
+                    "-Wno-missing-field-initializers",
+                    "-Wno-unused-function",
+                    "-Wno-unused-const-variable",
+                    "-Wno-unused-private-field"
+                ],
+            }
         }
     ]
 }

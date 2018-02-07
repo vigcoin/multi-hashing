@@ -7,7 +7,6 @@ extern "C" {
     #include "bcrypt.h"
     #include "keccak.h"
     #include "quark.h"
-    #include "scryptjane.h"
     #include "scryptn.h"
     #include "skein.h"
     #include "x11.h"
@@ -20,7 +19,7 @@ extern "C" {
     #include "cryptonight.h"
     #include "x13.h"
     #include "nist5.h"
-    #include "sha1.h",
+    #include "sha1.h"
     #include "x15.h"
 	#include "fresh.h"
 }
@@ -30,20 +29,23 @@ extern "C" {
 using namespace node;
 using namespace v8;
 
-Handle<Value> except(const char* msg) {
-    return ThrowException(Exception::Error(String::New(msg)));
+void except(const char* msg) {
+    Isolate* isolate = Isolate::GetCurrent();
+    isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, msg)));
 }
 
-Handle<Value> quark(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void quark(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -51,21 +53,21 @@ Handle<Value> quark(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     quark_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-Handle<Value> x11(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void x11(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -73,113 +75,80 @@ Handle<Value> x11(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     x11_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-Handle<Value> scrypt(const Arguments& args) {
-   HandleScope scope;
+void scrypt(const FunctionCallbackInfo<Value>& args) {
+    Isolate* isolate = Isolate::GetCurrent();
 
-   if (args.Length() < 3)
-       return except("You must provide buffer to hash, N value, and R value");
-
-   Local<Object> target = args[0]->ToObject();
-
-   if(!Buffer::HasInstance(target))
-       return except("Argument should be a buffer object.");
-    
-   Local<Number> numn = args[1]->ToNumber();
-   unsigned int nValue = numn->Value();
-   Local<Number> numr = args[2]->ToNumber();
-   unsigned int rValue = numr->Value();
-   
-   char * input = Buffer::Data(target);
-   char output[32];
-
-   uint32_t input_len = Buffer::Length(target);
-   
-   scrypt_N_R_1_256(input, output, nValue, rValue, input_len);
-
-   Buffer* buff = Buffer::New(output, 32);
-   return scope.Close(buff->handle_);
-}
-
-
-
-Handle<Value> scryptn(const Arguments& args) {
-   HandleScope scope;
-
-   if (args.Length() < 2)
-       return except("You must provide buffer to hash and N factor.");
-
-   Local<Object> target = args[0]->ToObject();
-
-   if(!Buffer::HasInstance(target))
-       return except("Argument should be a buffer object.");
-
-   Local<Number> num = args[1]->ToNumber();
-   unsigned int nFactor = num->Value();
-
-   char * input = Buffer::Data(target);
-   char output[32];
-
-   uint32_t input_len = Buffer::Length(target);
-
-   //unsigned int N = 1 << (getNfactor(input) + 1);
-   unsigned int N = 1 << nFactor;
-
-   scrypt_N_R_1_256(input, output, N, 1, input_len); //hardcode for now to R=1 for now
-
-
-   Buffer* buff = Buffer::New(output, 32);
-   return scope.Close(buff->handle_);
-}
-
-Handle<Value> scryptjane(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 5)
-        return except("You must provide two argument: buffer, timestamp as number, and nChainStarTime as number, nMin, and nMax");
+    if (args.Length() < 3) {
+        except("You must provide buffer to hash, N value, and R value");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("First should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
-    Local<Number> num = args[1]->ToNumber();
-    int timestamp = num->Value();
-
-    Local<Number> num2 = args[2]->ToNumber();
-    int nChainStartTime = num2->Value();
-
-    Local<Number> num3 = args[3]->ToNumber();
-    int nMin = num3->Value();
-
-    Local<Number> num4 = args[4]->ToNumber();
-    int nMax = num4->Value();
+    Local<Number> numn = args[1]->ToNumber(isolate);
+    unsigned int nValue = numn->Value();
+    Local<Number> numr = args[2]->ToNumber(isolate);
+    unsigned int rValue = numr->Value();
 
     char * input = Buffer::Data(target);
     char output[32];
 
     uint32_t input_len = Buffer::Length(target);
 
-    scryptjane_hash(input, input_len, (uint32_t *)output, GetNfactorJane(timestamp, nChainStartTime, nMin, nMax));
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    scrypt_N_R_1_256(input, output, nValue, rValue, input_len);
+    args.GetReturnValue().Set(String::NewFromUtf8(isolate, output));
 }
 
-Handle<Value> keccak(const Arguments& args) {
-    HandleScope scope;
+void scryptn(const FunctionCallbackInfo<Value>& args) {
+    Isolate* isolate = Isolate::GetCurrent();
 
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+    if (args.Length() < 2) {
+        except("You must provide buffer to hash and N factor.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
+
+    Local<Number> num = args[1]->ToNumber(isolate);
+    unsigned int nFactor = num->Value();
+
+    char * input = Buffer::Data(target);
+    char output[32];
+
+    uint32_t input_len = Buffer::Length(target);
+
+    //unsigned int N = 1 << (getNfactor(input) + 1);
+    unsigned int N = 1 << nFactor;
+
+    scrypt_N_R_1_256(input, output, N, 1, input_len); //hardcode for now to R=1 for now
+    args.GetReturnValue().Set(String::NewFromUtf8(isolate, output));
+}
+
+void keccak(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
+
+    Local<Object> target = args[0]->ToObject();
+
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -187,42 +156,41 @@ Handle<Value> keccak(const Arguments& args) {
     unsigned int dSize = Buffer::Length(target);
 
     keccak_hash(input, output, dSize);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-
-Handle<Value> bcrypt(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void bcrypt(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
 
     bcrypt_hash(input, output);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-Handle<Value> skein(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void skein(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -230,22 +198,21 @@ Handle<Value> skein(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
     
     skein_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-
-Handle<Value> groestl(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void groestl(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -253,22 +220,22 @@ Handle<Value> groestl(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     groestl_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
 
-Handle<Value> groestlmyriad(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void groestlmyriad(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -276,22 +243,21 @@ Handle<Value> groestlmyriad(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     groestlmyriad_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-
-Handle<Value> blake(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void blake(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -299,22 +265,22 @@ Handle<Value> blake(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     blake_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
 
-Handle<Value> fugue(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void fugue(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -322,22 +288,22 @@ Handle<Value> fugue(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     fugue_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
 
-Handle<Value> qubit(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void qubit(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -345,22 +311,22 @@ Handle<Value> qubit(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     qubit_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
 
-Handle<Value> hefty1(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void hefty1(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -368,22 +334,21 @@ Handle<Value> hefty1(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     hefty1_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-
-Handle<Value> shavite3(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void shavite3(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -391,29 +356,31 @@ Handle<Value> shavite3(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     shavite3_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-Handle<Value> cryptonight(const Arguments& args) {
-    HandleScope scope;
-
+void cryptonight(const FunctionCallbackInfo<Value>& args) {
     bool fast = false;
 
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
     
     if (args.Length() >= 2) {
-        if(!args[1]->IsBoolean())
-            return except("Argument 2 should be a boolean");
+        if (!args[1]->IsBoolean()) {
+            except("Argument 2 should be a boolean");
+            return;
+    }
         fast = args[1]->ToBoolean()->BooleanValue();
     }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -425,20 +392,21 @@ Handle<Value> cryptonight(const Arguments& args) {
     else
         cryptonight_hash(input, output, input_len);
 
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-Handle<Value> x13(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void x13(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -446,32 +414,39 @@ Handle<Value> x13(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     x13_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-Handle<Value> boolberry(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 2)
-        return except("You must provide two arguments.");
+void boolberry(const FunctionCallbackInfo<Value>& args) {
+    Isolate* isolate = Isolate::GetCurrent();
+    
+    if (args.Length() < 2) {
+        except("You must provide two arguments.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
     Local<Object> target_spad = args[1]->ToObject();
     uint32_t height = 1;
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument 1 should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument 1 should be a buffer object.");
+        return;
+    }
 
-    if(!Buffer::HasInstance(target_spad))
-        return except("Argument 2 should be a buffer object.");
+    if (!Buffer::HasInstance(target_spad)) {
+        except("Argument 2 should be a buffer object.");
+        return;
+    }
 
-    if(args.Length() >= 3)
-        if(args[2]->IsUint32())
-            height = args[2]->ToUint32()->Uint32Value();
-        else
-            return except("Argument 3 should be an unsigned integer.");
+    if(args.Length() >= 3) {
+        if(args[2]->IsUint32()) {
+            height = args[2]->Uint32Value();
+        } else {
+            except("Argument 3 should be an unsigned integer.");
+            return;
+        }
+    }
 
     char * input = Buffer::Data(target);
     char * scratchpad = Buffer::Data(target_spad);
@@ -481,21 +456,21 @@ Handle<Value> boolberry(const Arguments& args) {
     uint64_t spad_len = Buffer::Length(target_spad);
 
     boolberry_hash(input, input_len, scratchpad, spad_len, output, height);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(String::NewFromUtf8(isolate, output));
 }
 
-Handle<Value> nist5(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void nist5(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -503,21 +478,21 @@ Handle<Value> nist5(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     nist5_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-Handle<Value> sha1(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void sha1(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -525,21 +500,21 @@ Handle<Value> sha1(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     sha1_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-Handle<Value> x15(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void x15(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -547,21 +522,21 @@ Handle<Value> x15(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     x15_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-Handle<Value> fresh(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 1)
-        return except("You must provide one argument.");
+void fresh(const FunctionCallbackInfo<Value>& args) {
+    if (args.Length() < 1) {
+        except("You must provide one argument.");
+        return;
+    }
 
     Local<Object> target = args[0]->ToObject();
 
-    if(!Buffer::HasInstance(target))
-        return except("Argument should be a buffer object.");
+    if (!Buffer::HasInstance(target)) {
+        except("Argument should be a buffer object.");
+        return;
+    }
 
     char * input = Buffer::Data(target);
     char output[32];
@@ -569,34 +544,31 @@ Handle<Value> fresh(const Arguments& args) {
     uint32_t input_len = Buffer::Length(target);
 
     fresh_hash(input, output, input_len);
-
-    Buffer* buff = Buffer::New(output, 32);
-    return scope.Close(buff->handle_);
+    args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
 
-void init(Handle<Object> exports) {
-    exports->Set(String::NewSymbol("quark"), FunctionTemplate::New(quark)->GetFunction());
-    exports->Set(String::NewSymbol("x11"), FunctionTemplate::New(x11)->GetFunction());
-    exports->Set(String::NewSymbol("scrypt"), FunctionTemplate::New(scrypt)->GetFunction());
-    exports->Set(String::NewSymbol("scryptn"), FunctionTemplate::New(scryptn)->GetFunction());
-    exports->Set(String::NewSymbol("scryptjane"), FunctionTemplate::New(scryptjane)->GetFunction());
-    exports->Set(String::NewSymbol("keccak"), FunctionTemplate::New(keccak)->GetFunction());
-    exports->Set(String::NewSymbol("bcrypt"), FunctionTemplate::New(bcrypt)->GetFunction());
-    exports->Set(String::NewSymbol("skein"), FunctionTemplate::New(skein)->GetFunction());
-    exports->Set(String::NewSymbol("groestl"), FunctionTemplate::New(groestl)->GetFunction());
-    exports->Set(String::NewSymbol("groestlmyriad"), FunctionTemplate::New(groestlmyriad)->GetFunction());
-    exports->Set(String::NewSymbol("blake"), FunctionTemplate::New(blake)->GetFunction());
-    exports->Set(String::NewSymbol("fugue"), FunctionTemplate::New(fugue)->GetFunction());
-    exports->Set(String::NewSymbol("qubit"), FunctionTemplate::New(qubit)->GetFunction());
-    exports->Set(String::NewSymbol("hefty1"), FunctionTemplate::New(hefty1)->GetFunction());
-    exports->Set(String::NewSymbol("shavite3"), FunctionTemplate::New(shavite3)->GetFunction());
-    exports->Set(String::NewSymbol("cryptonight"), FunctionTemplate::New(cryptonight)->GetFunction());
-    exports->Set(String::NewSymbol("x13"), FunctionTemplate::New(x13)->GetFunction());
-    exports->Set(String::NewSymbol("boolberry"), FunctionTemplate::New(boolberry)->GetFunction());
-    exports->Set(String::NewSymbol("nist5"), FunctionTemplate::New(nist5)->GetFunction());
-    exports->Set(String::NewSymbol("sha1"), FunctionTemplate::New(sha1)->GetFunction());
-    exports->Set(String::NewSymbol("x15"), FunctionTemplate::New(x15)->GetFunction());
-    exports->Set(String::NewSymbol("fresh"), FunctionTemplate::New(fresh)->GetFunction());
+void init(Local<Object> exports) {
+    NODE_SET_METHOD(exports, "quark", quark);
+    NODE_SET_METHOD(exports, "x11", x11);
+    NODE_SET_METHOD(exports, "scrypt", scrypt);
+    NODE_SET_METHOD(exports, "scryptn", scryptn);
+    NODE_SET_METHOD(exports, "keccak", keccak);
+    NODE_SET_METHOD(exports, "bcrypt", bcrypt);
+    NODE_SET_METHOD(exports, "skein", skein);
+    NODE_SET_METHOD(exports, "groestl", groestl);
+    NODE_SET_METHOD(exports, "groestlmyriad", groestlmyriad);
+    NODE_SET_METHOD(exports, "blake", blake);
+    NODE_SET_METHOD(exports, "fugue", fugue);
+    NODE_SET_METHOD(exports, "qubit", qubit);
+    NODE_SET_METHOD(exports, "hefty1", hefty1);
+    NODE_SET_METHOD(exports, "shavite3", shavite3);
+    NODE_SET_METHOD(exports, "cryptonight", cryptonight);
+    NODE_SET_METHOD(exports, "x13", x13);
+    NODE_SET_METHOD(exports, "boolberry", boolberry);
+    NODE_SET_METHOD(exports, "nist5", nist5);
+    NODE_SET_METHOD(exports, "sha1", sha1);
+    NODE_SET_METHOD(exports, "x15", x15);
+    NODE_SET_METHOD(exports, "fresh", fresh);
 }
 
 NODE_MODULE(multihashing, init)
