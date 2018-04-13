@@ -361,6 +361,7 @@ void shavite3(const FunctionCallbackInfo<Value>& args) {
 
 void cryptonight(const FunctionCallbackInfo<Value>& args) {
     bool fast = false;
+    size_t variant = 0;
 
     if (args.Length() < 1) {
         except("You must provide one argument.");
@@ -371,8 +372,16 @@ void cryptonight(const FunctionCallbackInfo<Value>& args) {
         if (!args[1]->IsBoolean()) {
             except("Argument 2 should be a boolean");
             return;
-    }
+        }
         fast = args[1]->ToBoolean()->BooleanValue();
+    }
+
+    if (args.Length() >= 3) {
+        if (!args[2]->IsBoolean()) {
+            except("Argument 2 should be a boolean");
+            return;
+        }
+        variant = args[2]->ToUint32()->Uint32Value();
     }
 
     Local<Object> target = args[0]->ToObject();
@@ -390,7 +399,7 @@ void cryptonight(const FunctionCallbackInfo<Value>& args) {
     if(fast)
         cryptonight_fast_hash(input, output, input_len);
     else
-        cryptonight_hash(input, output, input_len);
+        cryptonight_hash(input, output, input_len, variant);
 
     args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
