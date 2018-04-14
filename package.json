@@ -6,12 +6,15 @@
         "name": "Matthew Little",
         "email": "zone117x@gmail.com"
     },
+    "scripts": {
+        "test": "./node_modules/.bin/mocha ./tests/**/*-test.js"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/zone117x/node-multi-hashing.git"
     },
-    "dependencies" : {
-        "bindings" : "*"
+    "dependencies": {
+        "bindings": "*"
     },
     "keywords": [
         "scrypt",
@@ -26,5 +29,8 @@
         "shavite",
         "fugue",
         "sha1"
-    ]
+    ],
+    "devDependencies": {
+        "mocha": "^5.1.0"
+    }
 }
