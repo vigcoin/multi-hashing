@@ -369,19 +369,13 @@ void cryptonight(const FunctionCallbackInfo<Value>& args) {
     }
     
     if (args.Length() >= 2) {
-        if (!args[1]->IsBoolean()) {
-            except("Argument 2 should be a boolean");
-            return;
+        if (args[1]->IsBoolean()) {
+            fast = args[1]->ToBoolean()->BooleanValue();
+        } else if (args[1]->IsUint32()) {
+            variant = args[1]->ToUint32()->Uint32Value();
+        } else {
+            return except("Argument 2 should be a boolean or uint32_t");
         }
-        fast = args[1]->ToBoolean()->BooleanValue();
-    }
-
-    if (args.Length() >= 3) {
-        if (!args[2]->IsBoolean()) {
-            except("Argument 2 should be a boolean");
-            return;
-        }
-        variant = args[2]->ToUint32()->Uint32Value();
     }
 
     Local<Object> target = args[0]->ToObject();
@@ -396,10 +390,15 @@ void cryptonight(const FunctionCallbackInfo<Value>& args) {
     
     uint32_t input_len = Buffer::Length(target);
 
-    if(fast)
+    if (fast) {
         cryptonight_fast_hash(input, output, input_len);
-    else
+    } else {
+         if (variant > 0 && input_len < 43) {
+            return except("Argument must be 43 bytes for monero variant 1+");
+         }
+            
         cryptonight_hash(input, output, input_len, variant);
+    }
 
     args.GetReturnValue().Set(node::Buffer::Copy(Isolate::GetCurrent(), output, 32).ToLocalChecked());
 }
