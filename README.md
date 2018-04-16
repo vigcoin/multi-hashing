@@ -1,11 +1,10 @@
-node-multi-hashing
-===============
+multi-hashing-bbscoin
+=====================
 
-[![Build Status](https://travis-ci.org/zone117x/node-multi-hashing.png?branch=master)](https://travis-ci.org/zone117x/node-multi-hashing)
+[![NPM](https://nodei.co/npm/multi-hashing-bbscoin.png?downloads=true&stars=true)](https://nodei.co/npm/multi-hashing-bbscoin/)
 
-[![NPM](https://nodei.co/npm/multi-hashing.png?downloads=true&stars=true)](https://nodei.co/npm/multi-hashing/)
-
-Cryptocurrency hashing functions for node.js.
+Generic cryptocurrency hashing functions for node.js.
+Supported by BBSCoin dev team.
 
 
 Algorithms
