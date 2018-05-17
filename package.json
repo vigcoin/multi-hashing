@@ -1,6 +1,6 @@
 {
-    "name": "multi-hashing-bbscoin",
-    "version": "1.0.0",
+    "name": "@vigcoin/multi-hashing",
+    "version": "0.1.0",
     "main": "multihashing",
     "author": {
         "name": "Matthew Little",
