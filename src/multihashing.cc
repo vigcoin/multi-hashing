@@ -4,27 +4,27 @@
 #include <stdint.h>
 
 extern "C" {
-    #include "bcrypt.h"
-    #include "keccak.h"
-    #include "quark.h"
-    #include "scryptn.h"
-    #include "skein.h"
-    #include "x11.h"
-    #include "groestl.h"
-    #include "blake.h"
-    #include "fugue.h"
-    #include "qubit.h"
-    #include "hefty1.h"
-    #include "shavite3.h"
-    #include "cryptonight.h"
-    #include "x13.h"
-    #include "nist5.h"
-    #include "sha1.h"
-    #include "x15.h"
-	#include "fresh.h"
+    #include "hashes/bcrypt.h"
+    #include "hashes/keccak.h"
+    #include "hashes/quark.h"
+    #include "hashes/scryptn.h"
+    #include "hashes/skein.h"
+    #include "hashes/x11.h"
+    #include "hashes/groestl.h"
+    #include "hashes/blake.h"
+    #include "hashes/fugue.h"
+    #include "hashes/qubit.h"
+    #include "hashes/hefty1.h"
+    #include "hashes/shavite3.h"
+    #include "hashes/cryptonight.h"
+    #include "hashes/x13.h"
+    #include "hashes/nist5.h"
+    #include "hashes/sha1.h"
+    #include "hashes/x15.h"
+    #include "hashes/fresh.h"
 }
 
-#include "boolberry.h"
+#include "hashes/boolberry.h"
 
 using namespace node;
 using namespace v8;

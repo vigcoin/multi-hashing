@@ -1,12 +1,18 @@
 {
     "name": "@vigcoin/multi-hashing",
-    "version": "0.1.0",
-    "main": "multihashing",
+    "version": "0.2.0",
     "author": {
         "name": "Matthew Little",
         "email": "zone117x@gmail.com"
     },
+    "files": [
+        "lib"
+    ],
+    "main": "lib/index.js",
+    "typings": "lib/index.d.ts",
     "scripts": {
+        "pretest": "tsc --pretty",
+        "prebuild": "npm run clean && npm run format && npm run lint && echo Using TypeScript && tsc --version",
         "test": "./node_modules/.bin/mocha ./tests/**/*-test.js"
     },
     "repository": {
@@ -31,6 +37,7 @@
         "sha1"
     ],
     "devDependencies": {
+        "@types/node": "^10.1.0",
         "mocha": "^5.1.0"
     }
 }
