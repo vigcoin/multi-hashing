@@ -1,12 +1,14 @@
 {
     "name": "@vigcoin/multi-hashing",
-    "version": "0.2.0",
+    "version": "0.2.4",
     "author": {
         "name": "Matthew Little",
         "email": "zone117x@gmail.com"
     },
     "files": [
-        "lib"
+        "binding.gyp",
+        "lib",
+        "src"
     ],
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
@@ -17,7 +19,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/bbscoin/multi-hashing-bbscoin.git"
+        "url": "https://github.com/vigcoin/multi-hashing.git"
     },
     "dependencies": {
         "bindings": "*"
