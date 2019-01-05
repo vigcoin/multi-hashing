@@ -1,9 +1,9 @@
 {
     "name": "@vigcoin/multi-hashing",
-    "version": "0.2.4",
+    "version": "0.3.0",
     "author": {
-        "name": "Matthew Little",
-        "email": "zone117x@gmail.com"
+        "name": "calidion",
+        "email": "calidion@gmail.com"
     },
     "files": [
         "binding.gyp",

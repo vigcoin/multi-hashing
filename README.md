@@ -1,10 +1,9 @@
-multi-hashing-bbscoin
+multi-hashing
 =====================
-
-[![NPM](https://nodei.co/npm/multi-hashing-bbscoin.png?downloads=true&stars=true)](https://nodei.co/npm/multi-hashing-bbscoin/)
+[![](https://travis-ci.com/vigcoin/multi-hashing.svg?branch=master)](https://travis-ci.com/vigcoin/multi-hashing)
 
 Generic cryptocurrency hashing functions for node.js.
-Supported by BBSCoin dev team.
+Supported by vigcoin dev team.
 
 
 Algorithms
