@@ -53,6 +53,10 @@
             "include_dirs": [
                 "src/crypto",
             ],
+            "cflags": [
+                "-maes",
+                ""
+            ],
             "cflags_cc": [
                 "-std=c++0x",                
             ]
