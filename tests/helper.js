@@ -11,7 +11,14 @@ function test(filename, hash) {
         .map((line) => {
             if (line) {
                 const [expected, data] = line.split(/\s+/);
-                assert.deepStrictEqual(hash(new Buffer(data, 'hex')).toString('hex'), expected);
+                try {
+                    var b = new Buffer(data, 'hex');
+                    assert.deepStrictEqual(hash(b).toString('hex'), expected);
+
+                } catch (e) {
+                    console.log(e);
+                    assert(data === 'x');
+                }
             }
         });
 }
