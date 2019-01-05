@@ -22,7 +22,8 @@
         "url": "https://github.com/vigcoin/multi-hashing.git"
     },
     "dependencies": {
-        "bindings": "*"
+        "bindings": "*",
+        "typescript": "^3.2.2"
     },
     "keywords": [
         "scrypt",
